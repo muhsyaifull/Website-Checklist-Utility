@@ -68,7 +68,7 @@
                 <tr>
                     <th></th>
                     @foreach($locations as $location)
-                        <th class="text-center">Token</th>
+                        <th class="text-center">Saldo</th>
                         <th class="text-center">Warna</th>
                     @endforeach
                     <th></th>
@@ -81,9 +81,25 @@
                         @foreach($locations as $location)
                             @php
                                 $reading = $dateReadings->where('location_id', $location->id)->first();
+                                $sisaSaldo = $reading?->token_value ?? 0;
+                                $isiUlang = $reading?->top_up_amount ?? 0;
+                                $totalSaldo = $sisaSaldo + $isiUlang;
+                                $hasTopUp = $isiUlang > 0;
                             @endphp
-                            <td class="text-center">
-                                {{ $reading?->token_value ? number_format($reading->token_value, 2) : '-' }}
+                            <td class="text-center font-weight-bold">
+                                @if($totalSaldo > 0)
+                                    @if($hasTopUp)
+                                        <span class="text-success total-with-topup" style="cursor: pointer;" data-toggle="popover"
+                                            data-trigger="click" data-html="true" data-placement="top" title="Detail Saldo"
+                                            data-content="<strong>Saldo Awal:</strong> {{ number_format($sisaSaldo, 2) }}<br><strong>Isi Ulang:</strong> <span class='text-success'>+{{ number_format($isiUlang, 2) }}</span>">
+                                            <i class="fas fa-plus-circle mr-1"></i>{{ number_format($totalSaldo, 2) }}
+                                        </span>
+                                    @else
+                                        {{ number_format($totalSaldo, 2) }}
+                                    @endif
+                                @else
+                                    -
+                                @endif
                             </td>
                             <td class="text-center">
                                 @if($reading?->indicator_color)
@@ -125,6 +141,24 @@
                     </tr>
                 @endforelse
             </tbody>
+            {{-- Total Isi Ulang Summary Row --}}
+            @if($readings->isNotEmpty())
+                <tfoot>
+                    <tr class="bg-light font-weight-bold">
+                        <td class="text-right">Total Isi Ulang:</td>
+                        @foreach($locations as $location)
+                            @php
+                                $totalTopUp = $readings->flatten()->where('location_id', $location->id)->sum('top_up_amount');
+                            @endphp
+                            <td class="text-center text-success">
+                                {{ $totalTopUp > 0 ? '+' . number_format($totalTopUp, 2) : '-' }}
+                            </td>
+                            <td class="text-center">-</td>
+                        @endforeach
+                        <td></td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </div>
 
@@ -154,6 +188,10 @@
                         @foreach($locations as $location)
                             @php
                                 $reading = $dateReadings->where('location_id', $location->id)->first();
+                                $sisaSaldo = $reading?->token_value ?? 0;
+                                $isiUlang = $reading?->top_up_amount ?? 0;
+                                $totalSaldo = $sisaSaldo + $isiUlang;
+                                $hasTopUp = $isiUlang > 0;
                             @endphp
                             <tr class="bg-success text-white">
                                 <th colspan="2" class="py-1 px-2">
@@ -164,9 +202,22 @@
                                 </th>
                             </tr>
                             <tr>
-                                <td class="py-1 px-2" style="width: 40%;">Token</td>
-                                <td class="py-1 px-2">
-                                    {{ $reading?->token_value ? number_format($reading->token_value, 2) : '-' }}</td>
+                                <td class="py-1 px-2" style="width: 40%;">Saldo</td>
+                                <td class="py-1 px-2 font-weight-bold">
+                                    @if($totalSaldo > 0)
+                                        @if($hasTopUp)
+                                            <span class="text-success total-with-topup" style="cursor: pointer;" data-toggle="popover"
+                                                data-trigger="click" data-html="true" data-placement="top" title="Detail Saldo"
+                                                data-content="<strong>Saldo Awal:</strong> {{ number_format($sisaSaldo, 2) }}<br><strong>Isi Ulang:</strong> <span class='text-success'>+{{ number_format($isiUlang, 2) }}</span>">
+                                                <i class="fas fa-plus-circle mr-1"></i>{{ number_format($totalSaldo, 2) }}
+                                            </span>
+                                        @else
+                                            {{ number_format($totalSaldo, 2) }}
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                             </tr>
                             <tr>
                                 <td class="py-1 px-2">Warna</td>
@@ -207,6 +258,16 @@
         vertical-align: middle;
     }
 
+    .total-with-topup {
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+    }
+
+    .total-with-topup:hover {
+        text-decoration-style: solid;
+    }
+
     @media (max-width: 991px) {
         .card-tools {
             width: 100%;
@@ -224,4 +285,24 @@
         }
     }
 </style>
+@stop
+
+@section('js')
+<script>
+    $(document).ready(function () {
+        // Initialize popovers
+        $('[data-toggle="popover"]').popover({
+            container: 'body'
+        });
+
+        // Close popover when clicking outside
+        $('body').on('click', function (e) {
+            $('[data-toggle="popover"]').each(function () {
+                if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                    $(this).popover('hide');
+                }
+            });
+        });
+    });
+</script>
 @stop

@@ -57,6 +57,7 @@ class GlampingController extends Controller
             'readings' => 'required|array',
             'readings.*.location_id' => 'required|exists:locations,id',
             'readings.*.token_value' => 'nullable|numeric|min:0',
+            'readings.*.top_up_amount' => 'nullable|numeric|min:0',
             'readings.*.indicator_color' => 'nullable|string|max:50',
         ]);
 
@@ -68,10 +69,11 @@ class GlampingController extends Controller
             foreach ($request->readings as $readingData) {
                 $locationId = $readingData['location_id'];
                 $tokenValue = $readingData['token_value'] ?? null;
+                $topUpAmount = $readingData['top_up_amount'] ?? null;
                 $indicatorColor = $readingData['indicator_color'] ?? null;
 
                 // Only create if at least one value is provided
-                if ($tokenValue !== null || $indicatorColor !== null) {
+                if ($tokenValue !== null || $topUpAmount !== null || $indicatorColor !== null) {
                     TokenReading::updateOrCreate(
                         [
                             'location_id' => $locationId,
@@ -79,6 +81,7 @@ class GlampingController extends Controller
                         ],
                         [
                             'token_value' => $tokenValue,
+                            'top_up_amount' => $topUpAmount,
                             'indicator_color' => $indicatorColor,
                             'created_by' => auth()->id(),
                         ]
@@ -120,6 +123,7 @@ class GlampingController extends Controller
             'readings' => 'required|array',
             'readings.*.location_id' => 'required|exists:locations,id',
             'readings.*.token_value' => 'nullable|numeric|min:0',
+            'readings.*.top_up_amount' => 'nullable|numeric|min:0',
             'readings.*.indicator_color' => 'nullable|string|max:50',
         ]);
 
@@ -129,10 +133,11 @@ class GlampingController extends Controller
             foreach ($request->readings as $readingData) {
                 $locationId = $readingData['location_id'];
                 $tokenValue = $readingData['token_value'] ?? null;
+                $topUpAmount = $readingData['top_up_amount'] ?? null;
                 $indicatorColor = $readingData['indicator_color'] ?? null;
 
-                if ($tokenValue === null && ($indicatorColor === null || $indicatorColor === '')) {
-                    // Delete if exists and both values are null
+                if ($tokenValue === null && $topUpAmount === null && ($indicatorColor === null || $indicatorColor === '')) {
+                    // Delete if exists and all values are null
                     TokenReading::where('location_id', $locationId)
                         ->whereDate('reading_date', $date)
                         ->delete();
@@ -144,6 +149,7 @@ class GlampingController extends Controller
                         ],
                         [
                             'token_value' => $tokenValue,
+                            'top_up_amount' => $topUpAmount,
                             'indicator_color' => $indicatorColor,
                             'created_by' => auth()->id(),
                         ]

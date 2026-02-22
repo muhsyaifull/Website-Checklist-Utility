@@ -54,9 +54,33 @@
                         <input type="hidden" name="readings[{{ $index }}][location_id]" value="{{ $location->id }}">
 
                         <div class="form-group">
-                            <label class="small text-muted">Token</label>
-                            <input type="number" step="0.01" class="form-control" name="readings[{{ $index }}][token_value]"
-                                placeholder="Nilai token" value="{{ old('readings.' . $index . '.token_value') }}">
+                            <label class="small text-muted">Saldo</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control token-input" id="token_display_{{ $location->id }}"
+                                    data-location="{{ $location->id }}" placeholder="Saldo saat ini">
+                                <input type="hidden" class="token-value" name="readings[{{ $index }}][token_value]"
+                                    id="token_{{ $location->id }}" value="{{ old('readings.' . $index . '.token_value') }}">
+                            </div>
+                            <small class="text-muted">Input angka mentah (÷100) atau langsung desimal</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small text-muted">Isi Ulang <span class="badge badge-secondary">Opsional</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control topup-input" id="topup_display_{{ $location->id }}"
+                                    data-location="{{ $location->id }}" placeholder="Jika ada pengisian">
+                                <input type="hidden" class="topup-value" name="readings[{{ $index }}][top_up_amount]"
+                                    id="topup_{{ $location->id }}" value="{{ old('readings.' . $index . '.top_up_amount') }}">
+                            </div>
+                            <small class="text-muted">Kosongkan jika tidak ada isi ulang</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="small text-muted">Total Saldo</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-light total-saldo" id="total_{{ $location->id }}"
+                                    readonly disabled placeholder="Auto">
+                            </div>
                         </div>
 
                         <div class="form-group mb-0">
@@ -96,4 +120,97 @@
         }
     }
 </style>
+@stop
+
+@section('js')
+<script>
+    $(document).ready(function () {
+        // Function to calculate and display total saldo
+        function calculateTotal(locationId) {
+            var tokenVal = parseFloat($('#token_' + locationId).val()) || 0;
+            var topupVal = parseFloat($('#topup_' + locationId).val()) || 0;
+            var total = tokenVal + topupVal;
+            
+            if (total > 0) {
+                $('#total_' + locationId).val(total.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            } else {
+                $('#total_' + locationId).val('');
+            }
+        }
+
+        // Smart input handler for sisa saldo
+        $('.token-input').on('input', function () {
+            var inputVal = $(this).val();
+            var locationId = $(this).data('location');
+
+            if (inputVal === '') {
+                $('#token_' + locationId).val('');
+                calculateTotal(locationId);
+                return;
+            }
+
+            var decimalValue;
+
+            if (inputVal.includes('.') || inputVal.includes(',')) {
+                decimalValue = parseFloat(inputVal.replace(',', '.'));
+            } else {
+                var rawValue = inputVal.replace(/[^0-9]/g, '');
+                decimalValue = parseInt(rawValue) / 100;
+            }
+
+            if (isNaN(decimalValue)) {
+                return;
+            }
+
+            $('#token_' + locationId).val(decimalValue.toFixed(2));
+            calculateTotal(locationId);
+        });
+
+        // Smart input handler for isi ulang
+        $('.topup-input').on('input', function () {
+            var inputVal = $(this).val();
+            var locationId = $(this).data('location');
+
+            if (inputVal === '') {
+                $('#topup_' + locationId).val('');
+                calculateTotal(locationId);
+                return;
+            }
+
+            var decimalValue;
+
+            if (inputVal.includes('.') || inputVal.includes(',')) {
+                decimalValue = parseFloat(inputVal.replace(',', '.'));
+            } else {
+                var rawValue = inputVal.replace(/[^0-9]/g, '');
+                decimalValue = parseInt(rawValue) / 100;
+            }
+
+            if (isNaN(decimalValue)) {
+                return;
+            }
+
+            $('#topup_' + locationId).val(decimalValue.toFixed(2));
+            calculateTotal(locationId);
+        });
+
+        // Reformat on blur for sisa saldo
+        $('.token-input').on('blur', function () {
+            var locationId = $(this).data('location');
+            var hiddenVal = parseFloat($('#token_' + locationId).val());
+            if (!isNaN(hiddenVal) && hiddenVal > 0) {
+                $(this).val(hiddenVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            }
+        });
+
+        // Reformat on blur for isi ulang
+        $('.topup-input').on('blur', function () {
+            var locationId = $(this).data('location');
+            var hiddenVal = parseFloat($('#topup_' + locationId).val());
+            if (!isNaN(hiddenVal) && hiddenVal > 0) {
+                $(this).val(hiddenVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            }
+        });
+    });
+</script>
 @stop

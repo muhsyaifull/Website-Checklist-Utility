@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ElectricityController;
 use App\Http\Controllers\WaterController;
 use App\Http\Controllers\GlampingController;
+use App\Http\Controllers\ExportController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -13,7 +14,14 @@ Route::get('/', function () {
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Electricity (Checklist Listrik)
+// Export PDF Routes
+Route::prefix('export')->name('export.')->group(function () {
+    Route::get('/electricity', [ExportController::class, 'electricityPdf'])->name('electricity');
+    Route::get('/water', [ExportController::class, 'waterPdf'])->name('water');
+    Route::get('/glamping', [ExportController::class, 'glampingPdf'])->name('glamping');
+});
+
+// Checklist Listrik
 Route::prefix('electricity')->name('electricity.')->group(function () {
     Route::get('/', [ElectricityController::class, 'index'])->name('index');
     Route::get('/create', [ElectricityController::class, 'create'])->name('create');
@@ -23,7 +31,7 @@ Route::prefix('electricity')->name('electricity.')->group(function () {
     Route::delete('/{date}', [ElectricityController::class, 'destroy'])->name('destroy');
 });
 
-// Water (Checklist Air)
+// Checklist Air
 Route::prefix('water')->name('water.')->group(function () {
     Route::get('/', [WaterController::class, 'index'])->name('index');
     Route::get('/create', [WaterController::class, 'create'])->name('create');
@@ -33,7 +41,7 @@ Route::prefix('water')->name('water.')->group(function () {
     Route::delete('/{date}', [WaterController::class, 'destroy'])->name('destroy');
 });
 
-// Glamping Token (Checklist Glamping)
+// Checklist Glamping
 Route::prefix('glamping')->name('glamping.')->group(function () {
     Route::get('/', [GlampingController::class, 'index'])->name('index');
     Route::get('/create', [GlampingController::class, 'create'])->name('create');

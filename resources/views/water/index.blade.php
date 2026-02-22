@@ -71,20 +71,42 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $readingsArray = $readings->toArray();
+                    $dates = array_keys($readingsArray);
+                @endphp
                 @forelse($readings as $date => $dateReadings)
+                    @php
+                        $currentIndex = array_search($date, $dates);
+                        $previousDate = isset($dates[$currentIndex + 1]) ? $dates[$currentIndex + 1] : null;
+                        $previousDateReadings = $previousDate ? $readings[$previousDate] : collect();
+                    @endphp
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</td>
                         @foreach($locations as $location)
                             @php
                                 $reading = $dateReadings->where('location_id', $location->id)->first();
+                                $prevReading = $previousDateReadings ? $previousDateReadings->where('location_id', $location->id)->first() : null;
                             @endphp
                             <td class="text-center">
-                                {{ $reading?->previous_value ? number_format($reading->previous_value, 2) : '-' }}</td>
+                                {{ $reading?->previous_value ? number_format($reading->previous_value, 2) : '-' }}
+                            </td>
                             <td class="text-center">
-                                {{ $reading?->current_value ? number_format($reading->current_value, 2) : '-' }}</td>
+                                {{ $reading?->current_value ? number_format($reading->current_value, 2) : '-' }}
+                            </td>
                             <td class="text-center font-weight-bold">
                                 @if($reading?->daily_usage !== null)
-                                    <span class="text-{{ $reading->daily_usage > 20 ? 'danger' : 'success' }}">
+                                    @php
+                                        $usageColor = 'dark'; // default hitam
+                                        if ($prevReading && $prevReading->daily_usage !== null) {
+                                            if ($reading->daily_usage > $prevReading->daily_usage) {
+                                                $usageColor = 'danger'; // merah - naik dari kemarin
+                                            } elseif ($reading->daily_usage < $prevReading->daily_usage) {
+                                                $usageColor = 'success'; // hijau - turun dari kemarin
+                                            }
+                                        }
+                                    @endphp
+                                    <span class="text-{{ $usageColor }}">
                                         {{ number_format($reading->daily_usage, 2) }} m³
                                     </span>
                                 @else
@@ -122,6 +144,11 @@
     {{-- Mobile Card View --}}
     <div class="card-body d-lg-none">
         @forelse($readings as $date => $dateReadings)
+            @php
+                $currentIndex = array_search($date, $dates);
+                $previousDate = isset($dates[$currentIndex + 1]) ? $dates[$currentIndex + 1] : null;
+                $previousDateReadings = $previousDate ? $readings[$previousDate] : collect();
+            @endphp
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
                     <strong><i class="fas fa-calendar-alt mr-1"></i>
@@ -152,18 +179,31 @@
                             <tr>
                                 <td class="py-1 px-2" style="width: 40%;">Previous</td>
                                 <td class="py-1 px-2">
-                                    {{ $reading?->previous_value ? number_format($reading->previous_value, 2) : '-' }}</td>
+                                    {{ $reading?->previous_value ? number_format($reading->previous_value, 2) : '-' }}
+                                </td>
                             </tr>
                             <tr>
                                 <td class="py-1 px-2">Current</td>
                                 <td class="py-1 px-2">
-                                    {{ $reading?->current_value ? number_format($reading->current_value, 2) : '-' }}</td>
+                                    {{ $reading?->current_value ? number_format($reading->current_value, 2) : '-' }}
+                                </td>
                             </tr>
                             <tr>
                                 <td class="py-1 px-2">Usage</td>
                                 <td class="py-1 px-2 font-weight-bold">
                                     @if($reading?->daily_usage !== null)
-                                        <span class="text-{{ $reading->daily_usage > 20 ? 'danger' : 'success' }}">
+                                        @php
+                                            $prevReadingMobile = $previousDateReadings ? $previousDateReadings->where('location_id', $location->id)->first() : null;
+                                            $usageColorMobile = 'dark'; // default hitam
+                                            if ($prevReadingMobile && $prevReadingMobile->daily_usage !== null) {
+                                                if ($reading->daily_usage > $prevReadingMobile->daily_usage) {
+                                                    $usageColorMobile = 'danger'; // merah - naik dari kemarin
+                                                } elseif ($reading->daily_usage < $prevReadingMobile->daily_usage) {
+                                                    $usageColorMobile = 'success'; // hijau - turun dari kemarin
+                                                }
+                                            }
+                                        @endphp
+                                        <span class="text-{{ $usageColorMobile }}">
                                             {{ number_format($reading->daily_usage, 2) }} m³
                                         </span>
                                     @else
