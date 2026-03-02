@@ -19,6 +19,11 @@ Route::prefix('export')->name('export.')->group(function () {
     Route::get('/electricity', [ExportController::class, 'electricityPdf'])->name('electricity');
     Route::get('/water', [ExportController::class, 'waterPdf'])->name('water');
     Route::get('/glamping', [ExportController::class, 'glampingPdf'])->name('glamping');
+
+    // Export Excel Routes
+    Route::get('/electricity-excel', [ExportController::class, 'electricityExcel'])->name('electricity.excel');
+    Route::get('/water-excel', [ExportController::class, 'waterExcel'])->name('water.excel');
+    Route::get('/glamping-excel', [ExportController::class, 'glampingExcel'])->name('glamping.excel');
 });
 
 // Checklist Listrik

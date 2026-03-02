@@ -41,6 +41,25 @@
                 </a>
             </div>
         </div>
+        <div class="dropdown ml-1">
+            <button class="btn btn-sm btn-success dropdown-toggle" type="button" id="exportExcelDropdown"
+                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-file-excel"></i> <span class="d-none d-sm-inline">Export Excel</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportExcelDropdown">
+                <a class="dropdown-item"
+                    href="{{ route('export.electricity.excel', ['month' => $month, 'year' => $year]) }}">
+                    <i class="fas fa-bolt text-warning mr-2"></i> Laporan Listrik
+                </a>
+                <a class="dropdown-item" href="{{ route('export.water.excel', ['month' => $month, 'year' => $year]) }}">
+                    <i class="fas fa-tint text-info mr-2"></i> Laporan Air
+                </a>
+                <a class="dropdown-item"
+                    href="{{ route('export.glamping.excel', ['month' => $month, 'year' => $year]) }}">
+                    <i class="fas fa-campground text-success mr-2"></i> Laporan Token Glamping
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 @stop
@@ -251,7 +270,8 @@
                                     <td>{{ $item['location']->name }}</td>
                                     <td>{{ $item['location']->meter_code ?? '-' }}</td>
                                     <td class="text-right font-weight-bold text-success">
-                                        {{ number_format($item['saldo_sekarang'], 2) }}</td>
+                                        {{ number_format($item['saldo_sekarang'], 2) }}
+                                    </td>
                                     <td class="text-right text-danger">{{ number_format($item['saldo_terpakai'], 2) }}</td>
                                     <td class="text-right text-info">
                                         {{ $item['total_topup'] > 0 ? '+' . number_format($item['total_topup'], 2) : '-' }}
