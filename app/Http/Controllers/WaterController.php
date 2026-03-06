@@ -22,11 +22,12 @@ class WaterController extends Controller
             ->with('location')
             ->orderBy('reading_date', 'desc');
 
-        // Filter by month and year if provided
-        if ($request->filled('month') && $request->filled('year')) {
-            $query->whereMonth('reading_date', $request->month)
-                ->whereYear('reading_date', $request->year);
-        }
+        // Use current month and year as default if not provided
+        $month = $request->filled('month') ? $request->month : date('n');
+        $year = $request->filled('year') ? $request->year : date('Y');
+
+        $query->whereMonth('reading_date', $month)
+            ->whereYear('reading_date', $year);
 
         // Group readings by date for display
         $readings = $query->get()->groupBy(function ($item) {

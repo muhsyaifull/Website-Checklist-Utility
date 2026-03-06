@@ -29,17 +29,16 @@
             <form action="{{ route('water.index') }}" method="GET" class="d-flex flex-wrap">
                 <select name="month" class="form-control form-control-sm mr-1 mb-1"
                     style="width: auto; min-width: 100px;">
-                    <option value="">Semua Bulan</option>
                     @for($i = 1; $i <= 12; $i++)
-                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                        <option value="{{ $i }}" {{ (request('month') ?? date('n')) == $i ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}
                         </option>
                     @endfor
                 </select>
                 <select name="year" class="form-control form-control-sm mr-1 mb-1" style="width: auto;">
-                    <option value="">Semua Tahun</option>
                     @for($y = date('Y'); $y >= 2020; $y--)
-                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        <option value="{{ $y }}" {{ (request('year') ?? date('Y')) == $y ? 'selected' : '' }}>{{ $y }}
+                        </option>
                     @endfor
                 </select>
                 <button type="submit" class="btn btn-sm btn-default mb-1">
